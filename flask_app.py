@@ -238,6 +238,7 @@ def query_sujects(subject_no,subject_name, credit, dept):
         if dept:  
             query += " AND Dept = %s"  
             params.append(dept)  
+        query += " ORDER BY Subject_No ASC"
         cursor.execute(query, params)  
         results = cursor.fetchall()  
         return results  
