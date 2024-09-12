@@ -1,0 +1,156 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <title>Lincoln University - My Course Information</title>  
+    <style>  
+        table {  
+            width: 100%;  
+            border-collapse: collapse;  
+        }  
+        th, td {  
+            padding: 12px;  
+            border: 1px solid #ddd;  
+            text-align: left;  
+        }  
+        th {  
+            background-color: #f2f2f2;  
+        }  
+        tr:nth-child(even) {  
+            background-color: #f9f9f9;  
+        }  
+        tr:hover {  
+            background-color: #f1f1f1;  
+        }  
+    </style>  
+    <script>  
+        function selectAll() {  
+            const checkboxes = document.querySelectorAll('input[name="selected_courses"]');  
+            checkboxes.forEach((checkbox) => {  
+                checkbox.checked = true;  
+            });  
+        }  
+
+        function deselectAll() {  
+            const checkboxes = document.querySelectorAll('input[name="selected_courses"]');  
+            checkboxes.forEach((checkbox) => {  
+                checkbox.checked = false;  
+            });  
+        }  
+
+        function confirmSubmission(event) {  
+            event.preventDefault(); // 阻止表单提交  
+            const checkboxes = document.querySelectorAll('input[name="selected_courses"]:checked');  
+            if (checkboxes.length === 0) {  
+                alert("Please select at least one course.");  
+                return;  
+            }  
+
+            // 弹窗确认  
+            if (confirm("Do you want to save the selected courses?")) {  
+                // 用户选择“是”，提交表单  
+                document.getElementById('courseForm').submit();  
+            } else {  
+                // 用户选择“否”，提示下一条  
+                alert("You can continue selecting courses.");  
+            }  
+        }  
+    </script>  
+</head>  
+<body>  
+    <header class="flex justify-between items-center mb-4">  
+        <div class="flex items-center ml-auto">  
+            {% if session.username %}  
+                <span class="mr-4 text-lg">Welcome，{{ fullname[0] }} {{ fullname[1] }} - {{username}} </span>  
+                <a href="{{ url_for('logout') }}" class="text-blue-600 hover:underline">Logout</a>  
+            {% else %}  
+                <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Login</a>  
+            {% endif %}  
+        </div>  
+    </header>  
+    <h1>My Course Information</h1>  
+    <form method="POST" class="mb-4">  
+        <label for="Subject_No" class="block mb-2">Subject No.:</label>   
+        <input type="text" id="Subject_No" name="Subject_No" value="{{subject_no}}" class="border p-2 mb-4 w-full">  
+        <label for="Subject_Name" class="block mb-2">Subject Name:</label>   
+        <input type="text" id="Subject_Name" name="Subject_Name" value="{{subject_name}}" class="border p-2 mb-4 w-full">  
+        <select id="Credits" name="Credits" class="border p-2 mb-4 w-full">  
+            <option value="">Please choose credit</option>  
+            {% for credit in credits %}  
+                <option value="{{ credit.Credits }}">{{ credit.Credits }}</option>  
+            {% endfor %}  
+        </select>  
+        <select id="Dept" name="Dept" class="border p-2 mb-4 w-full">  
+            <option value="">Please choose department</option>  
+            {% for dept in depts %}  
+                <option value="{{ dept.Dept }}">{{ dept.Dept }}</option>  
+            {% endfor %}  
+        </select>  
+        <button type="submit" class="bg-blue-500 text-white p-2">Search</button>  
+        <button type="button" class="bg-green-500 text-white p-2 ml-2" onclick="selectAll()">Select All</button> <!-- Select All 按钮 -->  
+        <button type="button" class="bg-red-500 text-white p-2 ml-2" onclick="deselectAll()">Deselect All</button> <!-- Deselect All 按钮 -->  
+    </form>  
+    <p></p>  
+    <form id="courseForm" method="POST">   <!-- 新增表单用于提交选中的课程 -->  
+        <button type="submit" name= "delete" class="bg-blue-500 text-white p-2 mt-4" >Delete Unsubmitted Course</button> <!-- 提交按钮 -->  
+        <table border="1">  
+            <tr>  
+   
+                <th>Course No</th>  
+                <th>Course Name</th>  
+                <th>Credits</th>  
+                <th>Lecturer</th>  
+                <th>Department</th>  
+                <th>Study Year</th>  
+                <th>Semester</th> 
+                <th>Status</th> 
+                <th>Submit</th>  
+                <th>Delete</th>
+            </tr>  
+            {% for result in results %}  
+            <tr>  
+                <form method="POST" id = "{{ result.subject_no }}">
+                <td><input id = "subject_no" name="subject_no"  value="{{ result.subject_no }}" readonly></td>  
+                <td>{{ result.subject_name }}</td>  
+                <td>{{ result.credits }}</td>  
+                <td>{{ result.lecturer }}</td>  
+                <td>{{ result.dept }}</td>  
+                <td>
+                    <select id="study_year" name="study_year" class="border p-2 mb-4 w-full">  
+                        <option value="{{ result.study_year }}">{{ result.study_year }}</option>  
+                        {% for year in years %}  
+                            <option value="{{ year }}">{{ year}}</option>  
+                        {% endfor %}  
+                    </select> 
+                </td>  
+                <td>
+                    <select id="semester" name="semester" class="border p-2 mb-4 w-full">  
+                        <option value="{{ result.semester }}">{{ result.semester }}</option>  
+                            <option value="S1">S1</option>  
+                            <option value="S2">S2</option>  
+                            <option value="SB">SB</option>  
+                    </select> 
+                </td>  
+                <td> {{ result.status }}</td>
+
+                <td>
+                    {% if result.status == "Draft" %}
+                    <button type="submit" name="submit_course">Submit</button></td>
+                    {% endif %}
+                  
+                <td>
+                    {% if result.status == "Draft" %}
+                    <button type="submit" name="delete_course">Delete</button>
+                    {% endif %}
+                
+                
+                
+                </td>  
+                </form>
+            </tr>  
+            {% endfor %}  
+        </table>  
+       
+    </form>  
+</body>  
+</html>
