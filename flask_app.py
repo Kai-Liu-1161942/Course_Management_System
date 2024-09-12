@@ -219,7 +219,7 @@ def query_sujects(subject_no,subject_name, credit, dept):
         connection = mysql.connector.connect(**connect.db_config)  
         cursor = connection.cursor(dictionary=True)  # 使用字典游标  
         query = """  
-            SELECT * FROM lincoln_courses 
+            SELECT * FROM Lincoln_Courses 
             WHERE Credits > 0  
         """  
         params = []
@@ -362,15 +362,15 @@ def subjects():
         conn = mysql.connector.connect(**connect.db_config)  
         cursor = conn.cursor(dictionary=True)  
 
-        select_query = "select * from lincoln_courses where credits is not null order by Dept asc;"  
+        select_query = "select * from Lincoln_Courses where credits is not null order by Dept asc;"  
         cursor.execute(select_query)  
         results = cursor.fetchall() 
 
-        dept_query = "select distinct(Dept) as Dept from lincoln_courses where Credits > 0;"  
+        dept_query = "select distinct(Dept) as Dept from Lincoln_Courses where Credits > 0;"  
         cursor.execute(dept_query)  
         depts = cursor.fetchall() 
 
-        credit_query = "select distinct(Credits) as Credits from lincoln_courses where credits > 0 order by Credits asc;"  
+        credit_query = "select distinct(Credits) as Credits from Lincoln_Courses where credits > 0 order by Credits asc;"  
         cursor.execute(credit_query)  
         credits = cursor.fetchall()
 
@@ -449,7 +449,7 @@ def course_mgmt():
         conn = mysql.connector.connect(**connect.db_config)  
         cursor = conn.cursor(dictionary=True)  
         select_query = """select a.subject_no, b.subject_name, b.credits, b.lecturer, b.dept, a.study_year, a.semester, a.status
-        from student_courses as a inner join lincoln_courses as b on a.subject_no = b.subject_no where username = %s; """  
+        from student_courses as a inner join Lincoln_Courses as b on a.subject_no = b.subject_no where username = %s; """  
         cursor.execute(select_query,(username,))  
         results = cursor.fetchall() 
     except mysql.connector.Error as err:  
