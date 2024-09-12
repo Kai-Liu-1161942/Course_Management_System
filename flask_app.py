@@ -139,7 +139,7 @@ def index():
         if conn is not None:  
             conn.close()  
     
-    return render_template('index6.html', results=results, message=message, fullname=fullname)
+    return render_template('Index6.html', results=results, message=message, fullname=fullname)
 
 @app.route('/subject', methods=['GET', 'POST']) 
 def subject():
