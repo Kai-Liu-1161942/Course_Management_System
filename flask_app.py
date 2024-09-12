@@ -272,7 +272,7 @@ def send_email(username,results):
     receiver_email = remail[0]  # 替换为接收者的邮箱
     password = "66363851lk"  # 替换为您的邮箱密码
     # 创建邮件内容
-    subject = f"{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {username} Course Selection Result"
+    subject = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {username} Course Selection Result'
     body_template = """
     <html>
     <head>
