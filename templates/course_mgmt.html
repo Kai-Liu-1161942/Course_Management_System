@@ -72,31 +72,8 @@
             {% endif %}  
         </div>  
     </header>  
-    <h1>My Course Information</h1>  
-    <form method="POST" class="mb-4">  
-        <label for="Subject_No" class="block mb-2">Subject No.:</label>   
-        <input type="text" id="Subject_No" name="Subject_No" value="{{subject_no}}" class="border p-2 mb-4 w-full">  
-        <label for="Subject_Name" class="block mb-2">Subject Name:</label>   
-        <input type="text" id="Subject_Name" name="Subject_Name" value="{{subject_name}}" class="border p-2 mb-4 w-full">  
-        <select id="Credits" name="Credits" class="border p-2 mb-4 w-full">  
-            <option value="">Please choose credit</option>  
-            {% for credit in credits %}  
-                <option value="{{ credit.Credits }}">{{ credit.Credits }}</option>  
-            {% endfor %}  
-        </select>  
-        <select id="Dept" name="Dept" class="border p-2 mb-4 w-full">  
-            <option value="">Please choose department</option>  
-            {% for dept in depts %}  
-                <option value="{{ dept.Dept }}">{{ dept.Dept }}</option>  
-            {% endfor %}  
-        </select>  
-        <button type="submit" class="bg-blue-500 text-white p-2">Search</button>  
-        <button type="button" class="bg-green-500 text-white p-2 ml-2" onclick="selectAll()">Select All</button> <!-- Select All 按钮 -->  
-        <button type="button" class="bg-red-500 text-white p-2 ml-2" onclick="deselectAll()">Deselect All</button> <!-- Deselect All 按钮 -->  
-    </form>  
-    <p></p>  
-    <form id="courseForm" method="POST">   <!-- 新增表单用于提交选中的课程 -->  
-        <button type="submit" name= "delete" class="bg-blue-500 text-white p-2 mt-4" >Delete Unsubmitted Course</button> <!-- 提交按钮 -->  
+    <h1>My Course Information</h1>   
+    <form id="courseForm" method="POST">   <!-- 新增表单用于提交选中的课程 -->    
         <table border="1">  
             <tr>  
    
