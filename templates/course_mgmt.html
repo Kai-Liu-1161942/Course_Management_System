@@ -110,7 +110,10 @@
             {% for result in results %}  
             <tr>  
                 <form method="POST" id = "{{ result.subject_no }}">
-                <td><input id = "subject_no" name="subject_no"  value="{{ result.subject_no }}" readonly></td>  
+                <td>
+                    <span>{{ result.subject_no }}</span>
+                    <input type="hidden" id = "subject_no" name="subject_no"  value="{{ result.subject_no }}">
+                </td>  
                 <td>{{ result.subject_name }}</td>  
                 <td>{{ result.credits }}</td>  
                 <td>{{ result.lecturer }}</td>  
