@@ -540,7 +540,7 @@ def login():
             user = cursor.fetchone()  
             if user and check_password_hash(user['password'], password):    
                 flask_session['username'] = user['username']  
-                flash('登录成功！', 'success')  
+                flash('Login succeed！', 'success')  
                 return redirect(url_for('index'))  
             else:  
                 flash('登录失败，用户名或密码不正确。', 'error')  
