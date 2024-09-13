@@ -367,7 +367,7 @@ def subjects():
         cursor.execute(select_query)  
         results = cursor.fetchall() 
 
-        dept_query = "select distinct(Dept) as Dept from Lincoln_Courses where Credits > 0;"  
+        dept_query = "select distinct(Dept) as Dept from Lincoln_Courses where Credits > 0 order by Dept ASC;"  
         cursor.execute(dept_query)  
         depts = cursor.fetchall() 
 
