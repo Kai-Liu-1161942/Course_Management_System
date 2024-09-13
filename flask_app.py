@@ -450,7 +450,7 @@ def course_mgmt():
         conn = mysql.connector.connect(**connect.db_config)  
         cursor = conn.cursor(dictionary=True)  
         select_query = """select a.subject_no, b.subject_name, b.credits, b.lecturer, b.dept, a.study_year, a.semester, a.status
-        from student_courses as a inner join Lincoln_Courses as b on a.subject_no = b.subject_no where username = %s; """  
+        from student_courses as a inner join Lincoln_Courses as b on a.subject_no = b.subject_no where username = %s order by a.subject_no asc; """  
         cursor.execute(select_query,(username,))  
         results = cursor.fetchall() 
     except mysql.connector.Error as err:  
