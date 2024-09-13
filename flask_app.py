@@ -398,8 +398,13 @@ def subjects():
             conn = mysql.connector.connect(**connect.db_config)  
             cursor = conn.cursor()  
             for course in selected_courses:  
-                insert_query = 'INSERT INTO student_courses (username, subject_no, status) VALUES (%s, %s,"Draft")'
-                cursor.execute(insert_query, (username, course))  
+                    # Check if the record already exists
+                check_query = 'SELECT COUNT(*) FROM student_courses WHERE username = %s AND subject_no = %s'
+                cursor.execute(check_query, (username, course))
+                result = cursor.fetchone()
+                if result[0] == 0:  # If the record does not exist
+                    insert_query = 'INSERT INTO student_courses (username, subject_no, status) VALUES (%s, %s,"Draft")'
+                    cursor.execute(insert_query, (username, course))  
             conn.commit()  # 提交事务  
             cursor.close()  
             conn.close()  # 关闭连接  
