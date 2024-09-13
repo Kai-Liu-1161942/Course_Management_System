@@ -55,6 +55,10 @@
                 alert("You can continue selecting courses.");  
             }  
         }  
+        function setRequired(isRequired) {
+            document.getElementById('study_year').required = isRequired;
+            document.getElementById('semester').required = isRequired;
+        }
     </script>  
 </head>  
 <body>  
@@ -119,7 +123,7 @@
                 <td>{{ result.lecturer }}</td>  
                 <td>{{ result.dept }}</td>  
                 <td>
-                    <select id="study_year" name="study_year" class="border p-2 mb-4 w-full">  
+                    <select id="study_year" name="study_year" class="border p-2 mb-4 w-full" required>  
                         <option value="{{ result.study_year }}">{{ result.study_year }}</option>  
                         {% for year in years %}  
                             <option value="{{ year }}">{{ year}}</option>  
@@ -127,7 +131,7 @@
                     </select> 
                 </td>  
                 <td>
-                    <select id="semester" name="semester" class="border p-2 mb-4 w-full">  
+                    <select id="semester" name="semester" class="border p-2 mb-4 w-full" required>  
                         <option value="{{ result.semester }}">{{ result.semester }}</option>  
                             <option value="S1">S1</option>  
                             <option value="S2">S2</option>  
@@ -138,12 +142,12 @@
 
                 <td>
                     {% if result.status == "Draft" %}
-                    <button type="submit" name="submit_course">Submit</button></td>
+                    <button type="submit" name="submit_course" onclick="setRequired(true)">Submit</button></td>
                     {% endif %}
                   
                 <td>
                     {% if result.status == "Draft" %}
-                    <button type="submit" name="delete_course">Delete</button>
+                    <button type="submit" name="delete_course" onclick="setRequired(false)">Delete</button>
                     {% endif %}
                 
                 
