@@ -3,6 +3,26 @@
 <head>  
     <meta charset="UTF-8">  
     <title>Student Information Management</title>  
+    <style>  
+        table {  
+            width: 60%;  
+            border-collapse: collapse;  
+        }  
+        th, td {  
+            padding: 12px;  
+            border: 1px solid #ddd;  
+            text-align: left;  
+        }  
+        th {  
+            background-color: #f2f2f2;  
+        }  
+        tr:nth-child(even) {  
+            background-color: #f9f9f9;  
+        }  
+        tr:hover {  
+            background-color: #f1f1f1;  
+        }  
+    </style>
 </head>  
 <body> 
     <header class="flex justify-between items-center mb-4">  
@@ -17,34 +37,50 @@
     </header>  
     <h1>Student Information Management</h1>  
 
-    <h2>Insert Student Information</h2>  
+    <h2>Create Student Information</h2>  
     <form method="post">  
-        <input type="text" name="student_no" placeholder="Student No" required>  
-        <input type="text" name="name" placeholder="Name" required>  
-        <input type="text" name="enrol_year_insert" placeholder="Enrollment Year" required>  
-        <input type="text" name="major_insert" placeholder="Major" required>  
-        <button type="submit" name="insert">Insert</button>  
+        <input type="text" name="username_ist" placeholder="ID:{{next_id}}" style="width: 103px;">
+        <input type="password" name="password_ist" placeholder="Password" required>  
+        <input type="text" name="first_name_ist" placeholder="First Name" required>  
+        <input type="text" name="last_name_ist" placeholder="Last Name" required>  
+        <input type="date" name="birth_date_ist" placeholder="Birth Date" required>  
+        <input type="email" name="email_ist" placeholder="Email" required>  
+        <select name="role_ist" required>
+            <option value="">Please select role</option>
+            {% for role in roles%}
+            <option value="{{role.role}}">{{role.role}}</option>
+            {% endfor %}
+        </select> 
+        <button type="submit" name="insert">Create</button>  
     </form>  
     
     <h2>Update Student Information</h2>  
     <form method="post">  
-        <select name="student_id" required>  
+        <select name="username_upd" required>  
             <option value="">Select Student</option>  
             {% for student in results %}  
-                <option value="{{ student.Student_No }}">{{ student.Name }}</option>  
+                <option value="{{ student.username }}">{{ student.username }}</option>  
             {% endfor %}  
         </select>  
-        <input type="text" name="name_update" placeholder="New Name" required>  
-        <input type="text" name="enrol_year_update" placeholder="New Enrollment Year" required>  
-        <input type="text" name="major_update" placeholder="New Major" required>  
+        <input type="password" name="password_upd" placeholder="Password">  
+        <input type="text" name="first_name_upd" placeholder="First Name">  
+        <input type="text" name="last_name_upd" placeholder="Last Name">  
+        <input type="date" name="birth_date_upd" placeholder="Birth Date">  
+        <input type="email" name="email_upd" placeholder="Email">  
+        <select name="role_upd">
+            <option value="">Please select role</option>
+            {% for role in roles%}
+            <option value="{{role.role}}">{{role.role}}</option>
+            {% endfor %}
+        </select>
         <button type="submit" name="update">Update</button>  
     </form>  
     <h3>Delete Student Information</h3>  
     <form method="post">  
-        <select name="student_del_id" required>  
+        <select name="username" required>  
             <option value="">Select Student</option>  
             {% for student in results %}  
-                <option value="{{ student.Student_No }}">{{student.Student_No}}-{{ student.Name }}</option>  
+                <option value="{{ student.username }}">{{student.username}}-{{ student.first_name }} {{ student.last_name }}</option>  
             {% endfor %}  
         </select>  
 
@@ -54,19 +90,25 @@
     <p>{{ message }}</p>  
 
     <h2>Student Information List</h2>  
-    <table border="1">  
+    <table>  
         <tr>  
             <th>Student No</th>  
-            <th>Name</th>  
-            <th>Enrollment Year</th>  
-            <th>Major</th>  
-        </tr>  
-        {% for student in results %}  
+            <th>First Name</th>  
+            <th>Last Name</th>
+            <th>Birth Date</th>  
+            <th>Register Date</th>
+            <th>Email</th>
+            <th>Role</th>
+        </tr> 
+        {% for student in results %} 
         <tr>  
-            <td>{{ student.Student_No }}</td>  
-            <td>{{ student.Name }}</td>  
-            <td>{{ student.Enrol_year }}</td>  
-            <td>{{ student.Major }}</td>  
+            <td>{{ student.username }}</td>  
+            <td>{{ student.first_name}}</td>  
+            <td>{{ student.last_name }}</td>  
+            <td>{{ student.birth_date }}</td>  
+            <td>{{ student.register_date }}</td>  
+            <td>{{ student.email }}</td> 
+            <td>{{ student.role }}</td> 
         </tr>  
         {% endfor %}  
     </table>  

@@ -33,6 +33,21 @@ def get_role(username):
     cursor.execute(user_query,(username,))
     role = cursor.fetchone()
     return role[0]
+def get_next_id():
+    conn = mysql.connector.connect(**connect.db_config)  
+    cursor = conn.cursor(dictionary=True)  
+    id_query = """SELECT CONCAT(YEAR(CURDATE()), LPAD(MAX(CAST(SUBSTRING(username, 5, 4) AS UNSIGNED)) + 1, 4, '0')) AS next_student_no
+        FROM users2
+        WHERE username LIKE CONCAT(YEAR(CURDATE()), '%')
+        AND username REGEXP '^[0-9]{8}$';
+        """
+    cursor.execute(id_query)
+    next_id = cursor.fetchone()['next_student_no']
+    if cursor is not None:  
+        cursor.close()  
+    if conn is not None:  
+        conn.close()  
+    return next_id
 
 @app.route('/', methods=['GET', 'POST'])  
 def index():  
@@ -46,28 +61,33 @@ def index():
     username = flask_session.get('username')
     fullname = get_fullname(username)
     role = get_role(username)
-    if role != "Admin":
+    if role != "administrator":
         return redirect(url_for("subjects"))
 
 
     if request.method == 'POST':  
         # Insert data part  
         if 'insert' in request.form:  
-            student_no = request.form.get('student_no')  
-            name = request.form.get('name')  
-            enrol_year = request.form.get('enrol_year_insert')  
-            major = request.form.get('major_insert')  
+            username = request.form.get('username_ist')  
+            if not username:
+                username = get_next_id()
+            password = generate_password_hash(request.form['password_ist'])  # 哈希密码
+            first_name = request.form.get('first_name_ist')
+            last_name = request.form.get('last_name_ist')
+            birth_date = request.form.get('birth_date_ist')
+            email = request.form.get('email_ist')
+            role = request.form.get('role_ist') 
 
             try:  
                 conn = mysql.connector.connect(**connect.db_config)  
                 cursor = conn.cursor()  
 
-                insert_query = "INSERT INTO Student_infor (Student_No, Name, Enrol_year, Major) VALUES (%s, %s, %s, %s)"  
-                cursor.execute(insert_query, (student_no, name, enrol_year, major))  
+                insert_query = "INSERT INTO users2 (username,password,first_name,last_name,birth_date,register_date,email,role) VALUES (%s, %s, %s, %s,%s, %s, %s, %s)"  
+                cursor.execute(insert_query, (username, password, first_name, last_name,birth_date,datetime.now().date(),email,role))  
                 conn.commit()  
-                message = "Student information inserted successfully!"  
+                message = f"Student {username} information created successfully!"  
 
-            except Error as e:  
+            except mysql.connector.Error as e:  
                 message = f"Database error: {e}"  
 
             finally:  
@@ -78,21 +98,48 @@ def index():
 
         # Update data part  
         if 'update' in request.form:  
-            student_id = request.form.get('student_id')  
-            name_update = request.form.get('name_update')  
-            enrol_year_update = request.form.get('enrol_year_update')  
-            major_update = request.form.get('major_update')  
+            username = request.form.get('username_upd')  
+            password = generate_password_hash(request.form['password_upd'])  # 哈希密码
+            first_name = request.form.get('first_name_upd')
+            last_name = request.form.get('last_name_upd')
+            birth_date = request.form.get('birth_date_upd')
+            email = request.form.get('email_upd')
+            role = request.form.get('role_upd')
 
             try:  
                 conn = mysql.connector.connect(**connect.db_config)  
                 cursor = conn.cursor()  
+                update_fields = []
+                update_values = []
+                if password:
+                    update_fields.append("password = %s")
+                    update_values.append(password)  
+                if first_name:
+                    update_fields.append("first_name = %s")
+                    update_values.append(first_name)
+                if last_name:
+                    update_fields.append("last_name = %s")
+                    update_values.append(last_name)
+                if birth_date:
+                    update_fields.append("birth_date = %s")
+                    update_values.append(birth_date)
+                if email:
+                    update_fields.append("email = %s")
+                    update_values.append(email)
+                if role:
+                    update_fields.append("role = %s")
+                    update_values.append(role)
 
-                update_query = "UPDATE Student_infor SET Name = %s, Enrol_year = %s, Major = %s WHERE Student_No = %s"  
-                cursor.execute(update_query, (name_update, enrol_year_update, major_update, student_id))  
-                conn.commit()  
-                message = "Student information updated successfully!"  
+                if update_fields:
+                    update_query = f"UPDATE users2 SET {', '.join(update_fields)} WHERE username = %s"
+                    update_values.append(username)
+                    cursor.execute(update_query, update_values)
+                    conn.commit()
+                    message = "Student information updated successfully!"
+                else:
+                    message = "No fields to update." 
 
-            except Error as e:  
+            except mysql.connector.Error as e:  
                 message = f"Database error: {e}"  
 
             finally:  
@@ -126,9 +173,14 @@ def index():
         conn = mysql.connector.connect(**connect.db_config)  
         cursor = conn.cursor(dictionary=True)  
 
-        select_query = "SELECT * FROM Student_infor"  
+        select_query = "SELECT username,first_name,last_name,birth_date,register_date,email,role FROM users2; "  
         cursor.execute(select_query)  
-        results = cursor.fetchall()  
+        results = cursor.fetchall() 
+        role_query = "select distinct(role) from users2" 
+        cursor.execute(role_query)
+        roles = cursor.fetchall()
+        next_id = get_next_id()
+        
 
     except Error as e:  
         message = f"Database query error: {e}"  
@@ -139,7 +191,7 @@ def index():
         if conn is not None:  
             conn.close()  
     
-    return render_template('Index6.html', results=results, message=message, fullname=fullname)
+    return render_template('Index6.html', results=results, message=message, fullname=fullname, roles=roles,next_id=next_id)
 
 @app.route('/subject', methods=['GET', 'POST']) 
 def subject():
@@ -432,7 +484,7 @@ def course_mgmt():
             try:
                 conn = mysql.connector.connect(**connect.db_config)  
                 cursor = conn.cursor()  
-                update_query = """ update student_courses set study_year = %s, semester = %s, status = %s where username = %s and subject_no = %s;  
+                update_query = """ update student_courses set study_year = %s, semester = %s, status = %s where username = %s and subject_no = %s LIMIT 1;  
     """
                 cursor.execute(update_query,(study_year,semester,"Submitted",username,subject_no))
                 conn.commit()
@@ -444,7 +496,7 @@ def course_mgmt():
                 conn = mysql.connector.connect(**connect.db_config)  
                 cursor = conn.cursor()  
 
-                delete_query = 'delete from student_courses where username = %s and subject_no = %s'
+                delete_query = 'delete from student_courses where username = %s and subject_no = %s LIMIT 1;'
                 cursor.execute(delete_query, (username, subject_no))  
                 conn.commit()  # 提交事务  
             except mysql.connector.Error as err:  
@@ -515,7 +567,7 @@ def register():
             cursor = connection.cursor()  
             cursor.execute("INSERT INTO users2 (username, password, gender, birth_date, register_date, first_name, last_name, email, role) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (username, password, gender, birth_date, datetime.now().date(),first_name,last_name,email,"student"))  
             connection.commit()  
-            flash('注册成功！请登录。', 'success')  
+            flash('Register successfully, please login', 'success')  
             return redirect(url_for('login'))  
         except mysql.connector.Error as err:  
             print(f"Error: {err}")  
@@ -529,8 +581,46 @@ def register():
 @app.route('/logout')  
 def logout():  
     flask_session.pop('username', None)  
-    flash('您已成功登出')  
+    flash("You've be successfully logout")  
     return redirect(url_for('login')) 
+
+@app.route('/profile', methods=['GET', 'POST'])  
+def profile_update():
+    if request.method == 'POST':  
+        username = request.form['username']  
+        gender = request.form['gender']
+        birth_date = request.form['birth_date']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        email = request.form['email']
+        role = request.form['role']
+        try:  
+            connection = mysql.connector.connect(**connect.db_config)  
+            cursor = connection.cursor()  
+            update_sql = """update users2 
+                            set gender = %s, birth_date = %s, first_name = %s, last_name = %s, email = %s, role = %s 
+                            where username = %s"""
+            cursor.execute(update_sql, (gender, birth_date, first_name,last_name,email,role,username))  
+            connection.commit()  
+            flash('Profile updated successfully!', 'success')  
+            return redirect(url_for('index'))  
+        except mysql.connector.Error as err:  
+            print(f"Error: {err}")  
+            flash('Update failed', 'error')  
+        finally:  
+                cursor.close()  
+                connection.close()  
+
+        
+    username = flask_session.get("username")
+    conn = mysql.connector.connect(**connect.db_config)  
+    cursor = conn.cursor(dictionary=True)  
+
+    select_query = "SELECT username,password,first_name,last_name,gender,birth_date,register_date,email,role FROM users2 where username = %s; "  
+    cursor.execute(select_query,(username,))  
+    result = cursor.fetchone() 
+
+    return render_template('profile.html',result=result)
 
 
 if __name__ == '__main__':
