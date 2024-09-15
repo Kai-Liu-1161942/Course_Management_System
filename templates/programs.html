@@ -1,0 +1,101 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <title>Lincoln University Program Information</title>  
+    <style>  
+        table {  
+            width: 100%;  
+            border-collapse: collapse;  
+        }  
+        th, td {  
+            padding: 12px;  
+            border: 1px solid #ddd;  
+            text-align: left;  
+        }  
+        th {  
+            background-color: #f2f2f2;  
+        }  
+        tr:nth-child(even) {  
+            background-color: #f9f9f9;  
+        }  
+        tr:hover {  
+            background-color: #f1f1f1;  
+        }  
+    </style>  
+    <script>  
+        function selectAll() {  
+            const checkboxes = document.querySelectorAll('input[name="selected_courses"]');  
+            checkboxes.forEach((checkbox) => {  
+                checkbox.checked = true;  
+            });  
+        }  
+
+        function deselectAll() {  
+            const checkboxes = document.querySelectorAll('input[name="selected_courses"]');  
+            checkboxes.forEach((checkbox) => {  
+                checkbox.checked = false;  
+            });  
+        }  
+ 
+    </script>  
+</head>  
+<body>
+    <header class="flex justify-between items-center mb-4">  
+        <div class="flex items-center ml-auto">  
+            {% if session.username %}  
+                <span class="mr-4 text-lg">Welcome，{{ fullname[0] }} {{ fullname[1] }} - <a href="{{ url_for('profile_update')}}">{{username}}</a></span>  
+                <a href="{{ url_for('logout') }}" class="text-blue-600 hover:underline">Logout</a>  
+            {% else %}  
+                <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Login</a>  
+            {% endif %}  
+        </div>  
+    </header>   
+    <h1>Lincoln University Program Information</h1>  
+    <form method="POST" class="mb-4">  
+        <label for="Subject_No" class="block mb-2">Subject No.:</label>   
+        <input type="text" id="Subject_No" name="Subject_No" value="{{subject_no}}" class="border p-2 mb-4 w-full">  
+        <label for="Subject_Name" class="block mb-2">Subject Name:</label>   
+        <input type="text" id="Subject_Name" name="Subject_Name" value="{{subject_name}}" class="border p-2 mb-4 w-full">  
+        <select id="Credits" name="Credits" class="border p-2 mb-4 w-full">  
+            <option value="">Please choose credit</option>  
+            {% for credit in credits %}  
+                <option value="{{ credit.Credits }}">{{ credit.Credits }}</option>  
+            {% endfor %}  
+        </select>  
+        <select id="Dept" name="Dept" class="border p-2 mb-4 w-full">  
+            <option value="">Please choose department</option>  
+            {% for dept in depts %}  
+                <option value="{{ dept.Dept }}">{{ dept.Dept }}</option>  
+            {% endfor %}  
+        </select>  
+        <button type="submit" name = "search" class="bg-blue-500 text-white p-2">Search</button>  
+        <button type="button" class="bg-green-500 text-white p-2 ml-2" onclick="selectAll()">Select All</button> <!-- Select All 按钮 -->  
+        <button type="button" class="bg-red-500 text-white p-2 ml-2" onclick="deselectAll()">Deselect All</button> <!-- Deselect All 按钮 -->  
+    </form>  
+    <p></p>  
+    <form id="courseForm" method="POST">   <!-- 新增表单用于提交选中的课程 -->  
+        <button type="submit" name = "selected" class="bg-blue-500 text-white p-2 mt-4">Submit Selected</button> <!-- 提交按钮 -->  <!--onclick="confirmSubmission(event)"-->
+        <button type="button" onclick="window.location.href='{{ url_for('course_mgmt') }}'">Review Selected</button>
+        <table border="1">  
+            <tr>  
+                <th>Select</th> <!-- 新增选择列 -->  
+                <th>Program Name</th>  
+                <th>Subject</th>  
+                <th>Degree</th>  
+                <th>Hyperlink</th>  
+            </tr>  
+            {% for result in program_data %}  
+            <tr>  
+                <td><input type="checkbox" name="selected_courses" value="{{ result.Subject_No }}"></td> <!-- 复选框 -->  
+                <td>{{ result.Program }}</td>  
+                <td>{{ result.Subject }}</td>  
+                <td>{{ result.Degree }}</td>  
+                <td><a href="{{result.Hyperlink }}"> {{result.Hyperlink }}</a></td>  
+            </tr>  
+            {% endfor %}  
+        </table>  
+       
+    </form>  
+</body>  
+</html>
