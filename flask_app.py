@@ -275,7 +275,7 @@ def subject():
             conn.close()  
     return render_template('subject.html', results=results, message=message)
 
-def query_sujects(subject_no,subject_name, credit, dept):  
+def query_subjects(subject_no,subject_name, credit, dept):  
     try:  
         connection = mysql.connector.connect(**connect.db_config)  
         cursor = connection.cursor(dictionary=True)  # 使用字典游标  
@@ -300,6 +300,39 @@ def query_sujects(subject_no,subject_name, credit, dept):
             query += " AND Dept = %s"  
             params.append(dept)  
         query += " ORDER BY Subject_No ASC"
+        cursor.execute(query, params)  
+        results = cursor.fetchall()  
+        return results  
+    except mysql.connector.Error as err:  
+        print(f"Error: {err}")  
+        return []  
+    finally:  
+            cursor.close()  
+            connection.close()
+
+def query_programs(program,subject_area, degree):  
+    try:  
+        connection = mysql.connector.connect(**connect.db_config)  
+        cursor = connection.cursor(dictionary=True)  # 使用字典游标  
+        query = """  
+            SELECT * FROM lincoln_programs
+            WHERE 1=1 
+        """  
+        params = []
+        # Add conditions based on provided parameters  
+        if program:
+            query += " AND program like %s"
+            program = "%" + program + "%"
+            params.append(program)
+        if subject_area:  
+            query += " AND subject_area like %s"  
+            subject_area = "%" + subject_area + "%"
+            params.append(subject_area)  
+        if degree:  
+            query += " AND degree = %s"  
+            params.append(degree)  
+
+        query += " ORDER BY program ASC"
         cursor.execute(query, params)  
         results = cursor.fetchall()  
         return results  
@@ -452,7 +485,7 @@ def subjects():
             credit = request.form.get("Credits")
             dept = request.form.get("Dept")
             results = []
-            results = query_sujects(subject_no,subject_name,credit,dept)
+            results = query_subjects(subject_no,subject_name,credit,dept)
         elif 'selected' in request.form:
             selected_courses = request.form.getlist('selected_courses') 
             username = flask_session.get("username")
@@ -633,62 +666,67 @@ def profile_update():
 
 @app.route('/programs', methods=['GET', 'POST'])  
 def programs():
-    # 设置Chrome选项
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # 无头模式
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
+    # 免费版无法访问网络
+    # # 设置Chrome选项
+    # chrome_options = Options()
+    # chrome_options.add_argument("--headless")  # 无头模式
+    # chrome_options.add_argument("--no-sandbox")
+    # chrome_options.add_argument("--disable-dev-shm-usage")
 
-    # 设置ChromiumDriver路径
-    #chrome_driver_path = r"D:\Python\chromedriver-win64\chromedriver.exe"
-    #service = Service(chrome_driver_path)
 
-    #driver = webdriver.Chrome(service=service, options=chrome_options)  
-    driver = webdriver.Chrome(options=chrome_options)  
-    driver.get("https://www.lincoln.ac.nz/study/study-programmes/programme-search")
+    # driver = webdriver.Chrome(options=chrome_options)  
+    # driver.get("https://www.lincoln.ac.nz/study/study-programmes/programme-search")
 
-    format_str = "{: <80} {: <70} {: <50}"
-    print(format_str.format("Subject", "Program Name", "Degree"))
+    # format_str = "{: <80} {: <70} {: <50}"
+    # print(format_str.format("Subject", "Program Name", "Degree"))
 
-    program_data = []
+    # program_data = []
 
-    programs = WebDriverWait(driver, 1).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a.block.w-full.py-4.md-224\\:flex.md-224\\:items-center.text-charcoal.group.hover\\:no-underline.focus\\:no-underline"))
-    )
+    # programs = WebDriverWait(driver, 1).until(
+    #         EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a.block.w-full.py-4.md-224\\:flex.md-224\\:items-center.text-charcoal.group.hover\\:no-underline.focus\\:no-underline"))
+    # )
 
-        # 提取课程名称和学位信息
-    for program in programs:
-        subject = program.find_element(By.CSS_SELECTOR, 'div.mb-2-5.md-224\\:w-full.md-224\\:max-w-9\\/50.md-224\\:pr-7-5.md-224\\:m-0').text
-        program_name = program.find_element(By.CSS_SELECTOR, 'span.transition-colors.duration-200.ease-in-out').text
-        degree = program.find_element(By.CSS_SELECTOR, 'div.mt-2-5.md-224\\:w-full.md-224\\:max-w-19\\/100.md-224\\:m-0').text
-        hyperlink = program.get_attribute('href')
+    #     # 提取课程名称和学位信息
+    # for program in programs:
+    #     subject = program.find_element(By.CSS_SELECTOR, 'div.mb-2-5.md-224\\:w-full.md-224\\:max-w-9\\/50.md-224\\:pr-7-5.md-224\\:m-0').text
+    #     program_name = program.find_element(By.CSS_SELECTOR, 'span.transition-colors.duration-200.ease-in-out').text
+    #     degree = program.find_element(By.CSS_SELECTOR, 'div.mt-2-5.md-224\\:w-full.md-224\\:max-w-19\\/100.md-224\\:m-0').text
+    #     hyperlink = program.get_attribute('href')
         
-        program_data.append({"Subject": subject, "Program": program_name, "Degree": degree,"Hyperlink": hyperlink})  
-    time.sleep(1)
+    #     program_data.append({"Subject": subject, "Program": program_name, "Degree": degree,"Hyperlink": hyperlink})  
+    # time.sleep(1)
 
-    for i in range(7):
-        next_page = driver.find_element(By.XPATH, '//a[@title="View next page of results"]')
-        next_page.click()
-        time.sleep(1)
-        programs = driver.find_elements(By.CSS_SELECTOR, 'a.block.w-full.py-4.md-224\\:flex.md-224\\:items-center.text-charcoal.group.hover\\:no-underline.focus\\:no-underline')
-        for program in programs:
-            subject = program.find_element(By.CSS_SELECTOR, 'div.mb-2-5.md-224\\:w-full.md-224\\:max-w-9\\/50.md-224\\:pr-7-5.md-224\\:m-0').text
-            program_name = program.find_element(By.CSS_SELECTOR, 'span.transition-colors.duration-200.ease-in-out').text
-            degree = program.find_element(By.CSS_SELECTOR, 'div.mt-2-5.md-224\\:w-full.md-224\\:max-w-19\\/100.md-224\\:m-0').text
-            hyperlink = program.get_attribute('href')
-            program_data.append({"Program": program_name,"Subject": subject,  "Degree": degree, "Hyperlink": hyperlink})  
-            
-    # for prog in program_data:
-    #     program_name = prog["Program"]
-    #     subject = prog["Subject"]
-    #     degree = prog["Degree"]
-    #     hyperlink = prog["Hyperlink"]
-    #     print(format_str.format(subject,program_name,degree,hyperlink))
-
-    driver.quit()
+    # for i in range(7):
+    #     next_page = driver.find_element(By.XPATH, '//a[@title="View next page of results"]')
+    #     next_page.click()
+    #     time.sleep(1)
+    #     programs = driver.find_elements(By.CSS_SELECTOR, 'a.block.w-full.py-4.md-224\\:flex.md-224\\:items-center.text-charcoal.group.hover\\:no-underline.focus\\:no-underline')
+    #     for program in programs:
+    #         subject = program.find_element(By.CSS_SELECTOR, 'div.mb-2-5.md-224\\:w-full.md-224\\:max-w-9\\/50.md-224\\:pr-7-5.md-224\\:m-0').text
+    #         program_name = program.find_element(By.CSS_SELECTOR, 'span.transition-colors.duration-200.ease-in-out').text
+    #         degree = program.find_element(By.CSS_SELECTOR, 'div.mt-2-5.md-224\\:w-full.md-224\\:max-w-19\\/100.md-224\\:m-0').text
+    #         hyperlink = program.get_attribute('href')
+    #         program_data.append({"Program": program_name,"Subject": subject,  "Degree": degree, "Hyperlink": hyperlink})  
     username = flask_session.get("username")
-    fullname = get_fullname(username)
-    return render_template('programs.html', program_data=program_data,fullname=fullname,username=username)
+    fullname = get_fullname(username)  
+
+    conn = mysql.connector.connect(**connect.db_config)  
+    cursor = conn.cursor(dictionary=True)  
+    degree_sql = "SELECT DISTINCT degree as degree FROM lincoln_programs where trim(degree) <> '';"
+    cursor.execute(degree_sql)
+    degrees = cursor.fetchall()
+
+    if request.method == 'POST':
+        if 'search' in request.form:  
+            program = request.form.get("program")
+            subject_area = request.form.get("subject_area")
+            degree = request.form.get("degree")
+            program_data = query_programs(program,subject_area,degree)
+    if request.method == 'GET':
+        select_query = "SELECT * FROM lincoln_programs;"  
+        cursor.execute(select_query)  
+        program_data = cursor.fetchall()  
+    return render_template('programs.html', program_data=program_data,fullname=fullname,username=username,degrees=degrees)
 
 
 if __name__ == '__main__':

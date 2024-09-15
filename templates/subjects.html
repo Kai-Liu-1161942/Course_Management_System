@@ -94,6 +94,7 @@
     <form id="courseForm" method="POST">   <!-- 新增表单用于提交选中的课程 -->  
         <button type="submit" name = "selected" class="bg-blue-500 text-white p-2 mt-4">Submit Selected</button> <!-- 提交按钮 -->  <!--onclick="confirmSubmission(event)"-->
         <button type="button" onclick="window.location.href='{{ url_for('course_mgmt') }}'">Review Selected</button>
+        <button type="button" onclick="window.location.href='{{ url_for('programs') }}'">Select Programs</button>
         <table border="1">  
             <tr>  
                 <th>Select</th> <!-- 新增选择列 -->  

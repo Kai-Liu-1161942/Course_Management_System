@@ -53,20 +53,15 @@
     </header>   
     <h1>Lincoln University Program Information</h1>  
     <form method="POST" class="mb-4">  
-        <label for="Subject_No" class="block mb-2">Subject No.:</label>   
-        <input type="text" id="Subject_No" name="Subject_No" value="{{subject_no}}" class="border p-2 mb-4 w-full">  
-        <label for="Subject_Name" class="block mb-2">Subject Name:</label>   
-        <input type="text" id="Subject_Name" name="Subject_Name" value="{{subject_name}}" class="border p-2 mb-4 w-full">  
-        <select id="Credits" name="Credits" class="border p-2 mb-4 w-full">  
-            <option value="">Please choose credit</option>  
-            {% for credit in credits %}  
-                <option value="{{ credit.Credits }}">{{ credit.Credits }}</option>  
-            {% endfor %}  
-        </select>  
-        <select id="Dept" name="Dept" class="border p-2 mb-4 w-full">  
-            <option value="">Please choose department</option>  
-            {% for dept in depts %}  
-                <option value="{{ dept.Dept }}">{{ dept.Dept }}</option>  
+        <label for="program" class="block mb-2">Program Name:</label>   
+        <input type="text" id="program" name="program" class="border p-2 mb-4 w-full">  
+        <label for="subject_area" class="block mb-2">Subject Area:</label>   
+        <input type="text" id="subject_area" name="subject_area" class="border p-2 mb-4 w-full">  
+        <label for="degree" class="block mb-2">Degree:</label>   
+        <select id="degrees" name="degrees" class="border p-2 mb-4 w-full">  
+            <option value="">Please choose degree</option>  
+            {% for degree in degrees %}  
+                <option value="{{ degree.degree }}">{{ degree.degree }}</option>  
             {% endfor %}  
         </select>  
         <button type="submit" name = "search" class="bg-blue-500 text-white p-2">Search</button>  
@@ -81,17 +76,17 @@
             <tr>  
                 <th>Select</th> <!-- 新增选择列 -->  
                 <th>Program Name</th>  
-                <th>Subject</th>  
+                <th>Subject Area</th>  
                 <th>Degree</th>  
                 <th>Hyperlink</th>  
             </tr>  
             {% for result in program_data %}  
             <tr>  
                 <td><input type="checkbox" name="selected_courses" value="{{ result.Subject_No }}"></td> <!-- 复选框 -->  
-                <td>{{ result.Program }}</td>  
-                <td>{{ result.Subject }}</td>  
-                <td>{{ result.Degree }}</td>  
-                <td><a href="{{result.Hyperlink }}"> {{result.Hyperlink }}</a></td>  
+                <td>{{ result.program }}</td>  
+                <td>{{ result.subject_area }}</td>  
+                <td>{{ result.degree }}</td>  
+                <td><a href="{{result.Hyperlink }}"> {{result.hyperlink }}</a></td>  
             </tr>  
             {% endfor %}  
         </table>  
