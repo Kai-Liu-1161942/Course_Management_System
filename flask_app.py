@@ -182,7 +182,7 @@ def index():
         conn = mysql.connector.connect(**connect.db_config)  
         cursor = conn.cursor(dictionary=True)  
 
-        select_query = "SELECT username,first_name,last_name,birth_date,register_date,email,role FROM users2; "  
+        select_query = "SELECT username,first_name,last_name,birth_date,register_date,email,program1,role FROM users2; "  
         cursor.execute(select_query)  
         results = cursor.fetchall() 
         role_query = "select distinct(role) from users2" 
