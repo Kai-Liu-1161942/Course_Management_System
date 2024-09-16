@@ -567,11 +567,17 @@ def course_mgmt():
                 send_email(username,results)
             else:
                 print("Results is null")
+    conn = mysql.connector.connect(**connect.db_config)  
+    cursor = conn.cursor() 
+    program_sql = 'select program1 from users2 where username = %s'
+    cursor.execute(program_sql,(username,)) 
+    program1 = cursor.fetchone()
 
-    return render_template('course_mgmt.html', results=results, message=message, fullname=fullname,username=username,years = years)
+    return render_template('course_mgmt.html', results=results, message=message, fullname=fullname,username=username,years = years,program1=program1)
 
 @app.route('/login', methods=['GET', 'POST'])  
 def login():  
+    flask_session.pop('_flashes', None)
     if request.method == 'POST':  
         username = request.form['username']  
         password = request.form['password']  
@@ -628,6 +634,18 @@ def logout():
 
 @app.route('/profile', methods=['GET', 'POST'])  
 def profile_update():
+    flask_session.pop('_flashes', None)
+    username_login = flask_session.get("username")
+    username_display = request.args.get('username')
+    if username_display and username_login != username_display:
+        conn = mysql.connector.connect(**connect.db_config)  
+        cursor = conn.cursor()  
+        get_role_sql = "SELECT role FROM users2 where username = %s"
+        cursor.execute(get_role_sql,(username_login,)) 
+        role = cursor.fetchone()
+        if role and role[0]!= "administrator":
+            flash(f"You have no permission to access {username_display}'s profile.", "danger")
+        
     if request.method == 'POST':  
         username = request.form['username']  
         gender = request.form['gender']
@@ -653,12 +671,14 @@ def profile_update():
                 cursor.close()  
                 connection.close()  
 
-        
-    username = flask_session.get("username")
+    if request.args.get('username'):
+        username =  request.args.get('username')
+    else:   
+        username = flask_session.get("username")
     conn = mysql.connector.connect(**connect.db_config)  
     cursor = conn.cursor(dictionary=True)  
 
-    select_query = "SELECT username,password,first_name,last_name,gender,birth_date,register_date,email,role FROM users2 where username = %s; "  
+    select_query = "SELECT username,password,first_name,last_name,gender,birth_date,register_date,email,program1,role FROM users2 where username = %s; "  
     cursor.execute(select_query,(username,))  
     result = cursor.fetchone() 
 
@@ -722,6 +742,17 @@ def programs():
             subject_area = request.form.get("subject_area")
             degree = request.form.get("degree")
             program_data = query_programs(program,subject_area,degree)
+        elif 'selected' in request.form:
+            selected_program = request.form.get('selected_program') 
+            conn = mysql.connector.connect(**connect.db_config)  
+            cursor = conn.cursor()  
+            update_query = 'update users2 set program1 = %s where username = %s'
+            cursor.execute(update_query, (selected_program, username))  
+            conn.commit()  # 提交事务  
+            cursor.close()  
+            conn.close()  # 关闭连接  
+            return redirect(url_for('course_mgmt'))
+
     if request.method == 'GET':
         select_query = "SELECT * FROM lincoln_programs;"  
         cursor.execute(select_query)  

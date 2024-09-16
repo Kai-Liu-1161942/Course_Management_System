@@ -82,7 +82,7 @@
             </tr>  
             {% for result in program_data %}  
             <tr>  
-                <td><input type="checkbox" name="selected_courses" value="{{ result.Subject_No }}"></td> <!-- 复选框 -->  
+                <td><input type="radio" name="selected_program" value="{{ result.program }}"></td> <!-- 单选框 -->  
                 <td>{{ result.program }}</td>  
                 <td>{{ result.subject_area }}</td>  
                 <td>{{ result.degree }}</td>  

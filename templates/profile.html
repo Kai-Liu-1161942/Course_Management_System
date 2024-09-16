@@ -9,6 +9,15 @@
 <body class="flex items-center justify-center h-screen bg-gray-100">  
     <div class="bg-white p-6 rounded shadow-md w-96">  
         <h2 class="text-2xl font-bold mb-4">Update profile</h2>  
+ {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
 
         <form method="POST">  
             <div class="mb-4">  
@@ -16,10 +25,12 @@
                 <span>{{ result.username }}</span>
                 <input type="hidden" name="username" id="username" value="{{ result.username }}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">  
             </div> 
+            <!--
             <div class="mb-4">  
                 <label for="password" class="block text-sm font-medium text-gray-700">Password</label>  
                 <input type="password" name="password" id="password" value="{{ result.password }}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">  
             </div>
+            -->
             <div class="mb-4">  
                 <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>  
                 <input type="text" name="first_name" id="first_name" value="{{ result.first_name }}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">  
@@ -48,6 +59,11 @@
                 <input type="text" id="email" name="email" value="{{result.email}}"  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                 </label> 
             </div>
+            <div class="mb-4">  
+                <label for="program" class="block text-sm font-medium text-gray-700">Major</label>  
+                <span>{{ result.program1 }}</span>
+                <input type="hidden" name="program" id="program" value="{{ result.program1 }}" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200">  
+            </div> 
             <div class="mb-4">  
                 <label for="role" class="block text-sm font-medium text-gray-700">Role</label>  
                 <span>{{ result.role }}</span>
