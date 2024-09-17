@@ -56,6 +56,21 @@
             }  
         }  
     </script>  
+        <style>
+            .btn {
+                background-color: #6c757d; /* Secondary color */
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+    
+            .btn:hover {
+                background-color: #007bff; /* Primary color */
+            }
+        </style>
+
 </head>  
 <body>
     <header class="flex justify-between items-center mb-4">  
@@ -86,15 +101,17 @@
                 <option value="{{ dept.Dept }}">{{ dept.Dept }}</option>  
             {% endfor %}  
         </select>  
-        <button type="submit" name = "search" class="bg-blue-500 text-white p-2">Search</button>  
-        <button type="button" class="bg-green-500 text-white p-2 ml-2" onclick="selectAll()">Select All</button> <!-- Select All 按钮 -->  
-        <button type="button" class="bg-red-500 text-white p-2 ml-2" onclick="deselectAll()">Deselect All</button> <!-- Deselect All 按钮 -->  
+        <button type="submit" name = "search" >Search</button>  
+        <button type="button"   onclick="selectAll()">Select All</button> <!-- Select All 按钮 -->  
+        <button type="button"  onclick="deselectAll()">Deselect All</button> <!-- Deselect All 按钮 -->  
     </form>  
     <p></p>  
     <form id="courseForm" method="POST">   <!-- 新增表单用于提交选中的课程 -->  
-        <button type="submit" name = "selected" class="bg-blue-500 text-white p-2 mt-4">Submit Selected</button> <!-- 提交按钮 -->  <!--onclick="confirmSubmission(event)"-->
-        <button type="button" onclick="window.location.href='{{ url_for('course_mgmt') }}'">Review Selected</button>
-        <button type="button" onclick="window.location.href='{{ url_for('programs') }}'">Select Programs</button>
+        <button type="submit" name = "selected" class="btn">Submit Selected</button> <!-- 提交按钮 -->  <!--onclick="confirmSubmission(event)"-->
+        <button type="button" class="btn" onclick="window.location.href='profile?username={{username}}'">1.My Profile</button>
+        <button type="button" class="btn" onclick="window.location.href='{{ url_for('programs') }}'">2.Select Major</button>
+        <button type="button" class="btn" onclick="window.location.href='{{ url_for('course_mgmt')}}'">3.My Courses</button>
+        
         <table border="1">  
             <tr>  
                 <th>Select</th> <!-- 新增选择列 -->  
