@@ -67,7 +67,7 @@
             {% if session.username %}  
                 <span class="mr-4 text-lg">Welcome，{{ fullname[0] }} {{ fullname[1] }} - <a href="/profile?username={{username}}">{{username}}</a> </span>  
                 <a href="{{ url_for('logout') }}" class="text-blue-600 hover:underline">Logout</a>  
-                <span class="ml-4 text-lg">| {{my_major]}}</span>  
+                <span class="ml-4 text-lg">| {{my_major}}</span>  
             {% else %}  
                 <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Login</a>  
             {% endif %}  

@@ -310,7 +310,7 @@ def query_subjects(subject_no,subject_name, credit, dept):
             cursor.close()  
             connection.close()
 
-def query_programs(program,subject_area, degree):  
+def query_programs(program,subject_area, degree,total_credits,duration):  
     try:  
         connection = mysql.connector.connect(**connect.db_config)  
         cursor = connection.cursor(dictionary=True)  # 使用字典游标  
@@ -331,6 +331,13 @@ def query_programs(program,subject_area, degree):
         if degree:  
             query += " AND degree = %s"  
             params.append(degree)  
+        if total_credits:  
+            query += " AND total_credit = %s"  
+            params.append(total_credits)  
+        if duration:
+            query += " AND duration = %s"  
+            params.append(duration)  
+
 
         query += " ORDER BY program ASC"
         cursor.execute(query, params)  
@@ -768,16 +775,25 @@ def programs():
 
     conn = mysql.connector.connect(**connect.db_config)  
     cursor = conn.cursor(dictionary=True)  
-    degree_sql = "SELECT DISTINCT degree as degree FROM lincoln_programs where trim(degree) <> '';"
+    degree_sql = "SELECT DISTINCT degree as degree FROM lincoln_programs where trim(degree) <> '' order by degree asc;"
     cursor.execute(degree_sql)
     degrees = cursor.fetchall()
+    total_credits_sql = "SELECT DISTINCT total_credit FROM lincoln_programs where trim(total_credit) <> '' order by total_credit asc;"
+    cursor.execute(total_credits_sql)
+    total_credits_options = cursor.fetchall()
+    duration_sql = "SELECT DISTINCT duration FROM lincoln_programs where trim(duration) <> '' order by duration asc;"
+    cursor.execute(duration_sql)
+    duration_options = cursor.fetchall()
+
 
     if request.method == 'POST':
         if 'search' in request.form:  
             program = request.form.get("program")
             subject_area = request.form.get("subject_area")
             degree = request.form.get("degree")
-            program_data = query_programs(program,subject_area,degree)
+            total_credits = request.form.get("total_credits")
+            duration = request.form.get("duration")
+            program_data = query_programs(program,subject_area,degree,total_credits,duration)
         elif 'selected' in request.form:
             selected_program = request.form.get('selected_program') 
             conn = mysql.connector.connect(**connect.db_config)  
@@ -793,7 +809,7 @@ def programs():
         select_query = "SELECT * FROM lincoln_programs;"  
         cursor.execute(select_query)  
         program_data = cursor.fetchall()  
-    return render_template('programs.html', program_data=program_data,fullname=fullname,username=username,degrees=degrees)
+    return render_template('programs.html', program_data=program_data,fullname=fullname,username=username,degrees=degrees,total_credits=total_credits_options,duration=duration_options)
 
 
 if __name__ == '__main__':

@@ -110,7 +110,7 @@
     </form>  
     <p></p>  
     <form id="courseForm" method="POST">   <!-- 新增表单用于提交选中的课程 -->  
-        <button type="submit" name = "selected" class="btn">Submit Selected</button> <!-- 提交按钮 -->  <!--onclick="confirmSubmission(event)"-->
+        <button type="submit" name = "selected" class="btn">Submit Selected Courses</button> <!-- 提交按钮 -->  <!--onclick="confirmSubmission(event)"-->
         <button type="button" class="btn" onclick="window.location.href='profile?username={{username}}'">1.My Profile</button>
         <button type="button" class="btn" onclick="window.location.href='{{ url_for('programs') }}'">2.Select Major</button>
         <button type="button" class="btn" onclick="window.location.href='{{ url_for('course_mgmt')}}'">3.My Courses</button>
@@ -125,7 +125,7 @@
                 <th>Title</th>  
                 <th>Department</th>  
                 <th>Email</th>  
-                <th>Course Link</th>  
+                <th>Details</th>  
             </tr>  
             {% for result in results %}  
             <tr>  
@@ -137,7 +137,7 @@
                 <td>{{ result.Title }}</td>  
                 <td>{{ result.Dept }}</td>  
                 <td>{{ result.Email }}</td>  
-                <td><a href="{{result.Hyper_Link }}"> {{result.Hyper_Link }}</a></td>  
+                <td><a href="{{result.Hyper_Link }}"> View</a></td>  
             </tr>  
             {% endfor %}  
         </table>  
