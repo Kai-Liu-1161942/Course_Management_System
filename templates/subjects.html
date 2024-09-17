@@ -2,6 +2,7 @@
 <html lang="en">  
 <head>  
     <meta charset="UTF-8">  
+
     <title>Lincoln University Course Information</title>  
     <style>  
         table {  
@@ -81,6 +82,8 @@
             {% else %}  
                 <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Login</a>  
             {% endif %}  
+            <span class="ml-4 text-lg">| {{my_major}}</span>
+            <a href="{{ url_for('change_password') }}" class="text-blue-600 hover:underline">| Change Password</a>
         </div>  
     </header>   
     <h1>Lincoln University Course Information</h1>  

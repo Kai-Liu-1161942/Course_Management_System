@@ -7,13 +7,26 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css">  
 </head>  
 <body class="flex items-center justify-center h-screen bg-gray-100">  
+
+    <header class="absolute top-4 left-4">  
+        <div class="flex items-center"> 
+            <span class="mr-4 text-lg"><a href="{{ url_for('index') }}" class="text-blue-600 hover:underline">Home</a></span> 
+            {% if session.username %}  
+                <span class="mr-4 text-lg">| Welcome，{{ fullname[0] }} {{ fullname[1] }} - <a href="/profile?username={{username}}" class="text-blue-600 hover:underline">{{username}}</a></span>  
+                <span class="mr-4 text-lg"><a href="{{ url_for('logout') }}" class="text-blue-600 hover:underline">Logout</a></span>
+            {% else %}  
+                <a href="{{ url_for('login') }}" class="text-blue-600 hover:underline">Login</a>  
+            {% endif %}  
+            <span class="ml-4 text-lg">| {{my_major}}</span>  
+        </div>  
+    </header>  
     <div class="bg-white p-6 rounded shadow-md w-96">  
         <h2 class="text-2xl font-bold mb-4">Update profile</h2>  
  {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
     <ul class="flashes">
       {% for category, message in messages %}
-        <li class="{{ category }}">{{ message }}</li>
+        <li class="text-sm text-red-600">{{ message }}</li>
       {% endfor %}
     </ul>
   {% endif %}

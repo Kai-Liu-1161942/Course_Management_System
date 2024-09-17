@@ -443,6 +443,15 @@ def send_email(username,results):
     except Exception as e:
         print(f"邮件发送失败: {e}")
 
+def get_major(username):
+    conn = mysql.connector.connect(**connect.db_config)  
+    cursor = conn.cursor() 
+    program_sql = 'select program1 from users2 where username = %s'
+    cursor.execute(program_sql,(username,)) 
+    program1 = cursor.fetchone()
+    conn.close()
+    cursor.close()
+    return program1[0]
   
 
 @app.route('/subjects', methods=['GET', 'POST']) 
@@ -504,9 +513,9 @@ def subjects():
             conn.close()  # 关闭连接  
             return redirect(url_for('course_mgmt'))
 
+    my_major = get_major(username)
 
-
-    return render_template('subjects.html', results=results,depts=depts, credits=credits, message=message,fullname=fullname,username=username)
+    return render_template('subjects.html', results=results,depts=depts, credits=credits, message=message,fullname=fullname,username=username,my_major=my_major)
 
 @app.route('/course_mgmt', methods=['GET', 'POST']) 
 def course_mgmt():
@@ -567,13 +576,8 @@ def course_mgmt():
                 send_email(username,results)
             else:
                 print("Results is null")
-    conn = mysql.connector.connect(**connect.db_config)  
-    cursor = conn.cursor() 
-    program_sql = 'select program1 from users2 where username = %s'
-    cursor.execute(program_sql,(username,)) 
-    program1 = cursor.fetchone()
-
-    return render_template('course_mgmt.html', results=results, message=message, fullname=fullname,username=username,years = years,program1=program1)
+    my_major = get_major(username)
+    return render_template('course_mgmt.html', results=results, message=message, fullname=fullname,username=username,years = years,my_major=my_major)
 
 @app.route('/login', methods=['GET', 'POST'])  
 def login():  
@@ -591,7 +595,7 @@ def login():
                 flash('Login succeed！', 'success')  
                 return redirect(url_for('index'))  
             else:  
-                flash('登录失败，用户名或密码不正确。', 'error')  
+                flash('Login failed, incorrect username or password.', 'error')  
         except mysql.connector.Error as err:  
             print(f"Error: {err}")  
         finally:  
@@ -619,7 +623,7 @@ def register():
             return redirect(url_for('login'))  
         except mysql.connector.Error as err:  
             print(f"Error: {err}")  
-            flash('注册失败，用户名可能已存在。', 'error')  
+            flash('Registration failed, the username may already exist', 'error')  
         finally:  
             #if connection.is_connected():  
                 cursor.close()  
@@ -631,6 +635,38 @@ def logout():
     flask_session.pop('username', None)  
     flash("You've be successfully logout")  
     return redirect(url_for('login')) 
+
+@app.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    flask_session.pop('_flashes', None)
+    username = flask_session.get("username")
+    if request.method == 'POST':
+        old_password = request.form['old_password']
+        new_password = request.form['new_password']
+        new_password_confirm = request.form['new_password_confirm']
+
+        conn = mysql.connector.connect(**connect.db_config)
+        cursor = conn.cursor()
+        check_sql = "SELECT password FROM users2 WHERE username = %s"
+        cursor.execute(check_sql, (username,))
+        result = cursor.fetchone()
+        if result and not check_password_hash(result[0], old_password):
+            flash('Old password is incorrect', 'error')
+            return redirect(url_for('change_password'))
+        elif new_password != new_password_confirm:
+            flash('New passwords do not match', 'error')
+            return redirect(url_for('change_password'))
+        else:
+            update_sql = "UPDATE users2 SET password = %s WHERE username = %s"
+            cursor.execute(update_sql, (generate_password_hash(new_password), username))
+            conn.commit()
+            flash('Password updated successfully', 'success')
+            return redirect(url_for('index'))  
+  
+    fullname=get_fullname(username)
+    my_major = get_major(username)
+    return render_template('change_password.html',username=username,fullname=fullname,my_major=my_major)
+
 
 @app.route('/profile', methods=['GET', 'POST'])  
 def profile_update():
@@ -681,8 +717,8 @@ def profile_update():
     select_query = "SELECT username,password,first_name,last_name,gender,birth_date,register_date,email,program1,role FROM users2 where username = %s; "  
     cursor.execute(select_query,(username,))  
     result = cursor.fetchone() 
-
-    return render_template('profile.html',result=result)
+    fullname = get_fullname(username_login)
+    return render_template('profile.html',result=result,username=username_login,fullname=fullname,my_major=get_major(username_login))
 
 @app.route('/programs', methods=['GET', 'POST'])  
 def programs():
