@@ -441,7 +441,7 @@ def send_email(receiver_email, subject, body_template, results):  #*results 代�
         return True  # 邮件发送成功  
     except Exception as e:  
         print(f"The email was not sent. Error: {e}")  
-        return False  # 邮件发送失败
+        return e  # 邮件发送失败
     
 @app.route('/send_email', methods=['GET', 'POST']) 
 def send_email_page():
@@ -561,31 +561,12 @@ def send_email_page():
     </body>
     </html>
     """
-    #template = Template(body_template)
-    #body = template.render(results=results,fullname=fullname,my_program=my_program) 
-    success = send_email(receiver_email, subject, body_template,results)  
+    feedback = send_email(receiver_email, subject, body_template,results)  
 
-    # # 创建MIMEText对象
-    # msg = MIMEMultipart()
-    # msg['From'] = sender_email
-    # msg['To'] = receiver_email
-    # msg['Subject'] = subject
-    # msg.attach(MIMEText(body, 'html'))
-
-    # # 连接到SMTP服务器并发送邮件
-    # try:
-    #     with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
-    #         server.starttls()  # 启用TLS加密
-    #         server.login(sender_email, password)  # 登录
-    #         server.send_message(msg)  # 发送邮件
-    #     flash(f'The email has been sent successfully to {receiver_email}！', 'success') 
-    # except Exception as e:
-    #     flash(f"The email was not sent. Error: {e}",'error')
-    # return redirect(url_for('subjects'))
-    if success:  
+    if feedback == True:  
         flash(f'The email has been sent successfully to {receiver_email}！', 'success')   
     else:  
-        flash('The email was not sent. Please try again.', 'error')  
+        flash(f'The email was not sent. {feedback}', 'error')  
 
     return redirect(url_for('subjects'))  
 @app.route('/login', methods=['GET', 'POST'])  
