@@ -114,6 +114,16 @@
         <button type="button" class="btn" onclick="window.location.href='profile?username={{username}}'">1.My Profile</button>
         <button type="button" class="btn" onclick="window.location.href='{{ url_for('programs') }}'">2.Select Major</button>
         <button type="button" class="btn" onclick="window.location.href='{{ url_for('course_mgmt')}}'">3.My Courses</button>
+        <button type="button" class="btn" onclick="window.location.href='{{ url_for('send_email')}}'">4.Send Email to Me</button>
+        {% with messages = get_flashed_messages(with_categories=true) %}  
+        {% if messages %}  
+            <ul class="mb-4">  
+                {% for category, message in messages %}  
+                    <li class="text-sm text-red-600">{{ message }}</li>  
+                {% endfor %}  
+            </ul>  
+        {% endif %}  
+    {% endwith %} 
         
         <table border="1">  
             <tr>  

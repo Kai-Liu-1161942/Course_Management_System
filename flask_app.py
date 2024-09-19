@@ -350,105 +350,7 @@ def query_programs(program,subject_area, degree,total_credits,duration):
             cursor.close()  
             connection.close()
 
-def send_email(username,results):
 
-    try:  
-        conn = mysql.connector.connect(**connect.db_config)  
-        cursor = conn.cursor()  
-
-        select_query = "select email from users2 where username = %s"  
-        cursor.execute(select_query, (username,))  
-        remail = cursor.fetchone()
-
-    except Error as e:  
-        message = f"Database error: {e}"  
-
-    finally:  
-        if cursor is not None:  
-            cursor.close()  
-        if conn is not None:  
-            conn.close()  
-    fullname = get_fullname(username)
-    # 邮件发送者和接收者
-    sender_email = "kevin.liu.nz@hotmail.com"
-    receiver_email = remail[0]  # 替换为接收者的邮箱
-    password = "66363851lk"  # 替换为您的邮箱密码
-    # 创建邮件内容
-    subject = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {username} Course Selection Result'
-    body_template = """
-    <html>
-    <head>
-        <style>  
-        table {  
-            width: 100%;  
-            border-collapse: collapse;  
-        }  
-        th, td {  
-            padding: 12px;  
-            border: 1px solid #ddd;  
-            text-align: left;  
-        }  
-        th {  
-            background-color: #f2f2f2;  
-        }  
-        tr:nth-child(even) {  
-            background-color: #f9f9f9;  
-        }  
-        tr:hover {  
-            background-color: #f1f1f1;  
-        }  
-        </style>
-    </head>
-    <body>
-        <p>Dear {{fullname[0]}} {{fullname[1]}}:</p>
-        <p>This is your latest course information.</p>
-        <table border="1">
-        <tr>
-            <th>Course No</th>
-            <th>Course Name</th>
-            <th>Credits</th>
-            <th>Lecturer</th>
-            <th>Department</th>
-            <th>Study Year</th>
-            <th>Semester</th>
-            <th>Status</th>
-        </tr>
-        {% for result in results %}
-        <tr>
-            <td>{{ result.subject_no }}</td>
-            <td>{{ result.subject_name }}</td>
-            <td>{{ result.credits }}</td>
-            <td>{{ result.lecturer }}</td>
-            <td>{{ result.dept }}</td>
-            <td>{{ result.study_year }}</td>
-            <td>{{ result.semester }}</td>
-            <td>{{ result.status }}</td>
-        </tr>
-        {% endfor %}
-        </table>
-        <p></p>
-        <p>Student Administration</p>
-    </body>
-    </html>
-    """
-    template = Template(body_template)
-    body = template.render(results=results,fullname=fullname) 
-    # 创建MIMEText对象
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'html'))
-
-    # 连接到SMTP服务器并发送邮件
-    try:
-        with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
-            server.starttls()  # 启用TLS加密
-            server.login(sender_email, password)  # 登录
-            server.send_message(msg)  # 发送邮件
-        print("邮件发送成功！")
-    except Exception as e:
-        print(f"邮件发送失败: {e}")
 
 def get_major(username):
     conn = mysql.connector.connect(**connect.db_config)  
@@ -577,15 +479,145 @@ def course_mgmt():
     years = [datetime.now().year,datetime.now().year+1,datetime.now().year+2]
 
 
-    if request.method == "POST":
-        if 'submit_course' or 'delete_course' in request.form:
-            if results:
-                send_email(username,results)
-            else:
-                print("Results is null")
+    # if request.method == "POST":
+    #     if 'submit_course' or 'delete_course' in request.form:
+    #         if results:
+    #             send_email(username,results)
+    #         else:
+    #             print("Results is null")
     my_major = get_major(username)
     return render_template('course_mgmt.html', results=results, message=message, fullname=fullname,username=username,years = years,my_major=my_major)
+@app.route('/send_email', methods=['GET', 'POST']) 
+def send_email():
+    username = flask_session.get("username")
+    #flask_session.pop('username', None)
+    conn = mysql.connector.connect(**connect.db_config)  
+    cursor = conn.cursor(dictionary=True)  
+    select_query = """select a.subject_no, b.subject_name, b.credits, b.lecturer, b.dept, a.study_year, a.semester, a.status
+    from student_courses as a inner join Lincoln_Courses as b on a.subject_no = b.subject_no where username = %s order by a.subject_no asc; """  
+    cursor.execute(select_query,(username,))  
+    results = cursor.fetchall() 
+    try:  
+        select_query = "select email from users2 where username = %s"  
+        cursor.execute(select_query, (username,))  
+        remail = cursor.fetchone()
 
+    except Error as e:  
+        message = f"Database error: {e}"  
+     
+            
+
+    program_sql = "select * from users2 as a left join lincoln_programs as b on a.program1 = b.program where a.username = %s;"
+    cursor.execute(program_sql,(username,))
+    my_program = cursor.fetchone()
+    if cursor is not None:  
+        cursor.close()
+    if conn is not None:  
+        conn.close()    
+    fullname = get_fullname(username)
+    # 邮件发送者和接收者
+    sender_email = "kevin.liu.nz@hotmail.com"
+    receiver_email = remail["email"]  # 替换为接收者的邮箱
+    password = "66363851lk"  # 替换为您的邮箱密码
+    # 创建邮件内容
+    subject = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {username} Course Selection Result'
+    body_template = """
+    <html>
+    <head>
+        <style>  
+        table {  
+            width: 100%;  
+            border-collapse: collapse;  
+        }  
+        th, td {  
+            padding: 12px;  
+            border: 1px solid #ddd;  
+            text-align: left;  
+        }  
+        th {  
+            background-color: #f2f2f2;  
+        }  
+        tr:nth-child(even) {  
+            background-color: #f9f9f9;  
+        }  
+        tr:hover {  
+            background-color: #f1f1f1;  
+        }  
+        </style>
+    </head>
+    <body>
+        <p>Dear {{fullname[0]}} {{fullname[1]}}:</p>
+        <p>This is your latest course information.</p>
+        <p>Your major information:</p>
+        <table border="1">  
+            <tr>  
+                <th>Program Name</th>  
+                <th>Subject Area</th>  
+                <th>Degree</th>  
+                <th>Total Credits</th>
+                <th>Duration</th>
+                <th>Location</th>
+                <th>Details</th>  
+            </tr>   
+            <tr>  
+                <td>{{ my_program.program }}</td>  
+                <td>{{ my_program.subject_area }}</td>  
+                <td>{{ my_program.degree }}</td>  
+                <td>{{ my_program.total_credit}}</td>  
+                <td>{{ my_program.duration }}</td>  
+                <td>{{ my_program.location}}</td>  
+                <td><a href="{{my_program.hyperlink }}"> View</a></td>  
+            </tr>  
+        </table> 
+        <p>Your course information:</p>
+        <table border="1">
+        <tr>
+            <th>Course No</th>
+            <th>Course Name</th>
+            <th>Credits</th>
+            <th>Lecturer</th>
+            <th>Department</th>
+            <th>Study Year</th>
+            <th>Semester</th>
+            <th>Status</th>
+        </tr>
+        {% for result in results %}
+        <tr>
+            <td>{{ result.subject_no }}</td>
+            <td>{{ result.subject_name }}</td>
+            <td>{{ result.credits }}</td>
+            <td>{{ result.lecturer }}</td>
+            <td>{{ result.dept }}</td>
+            <td>{{ result.study_year }}</td>
+            <td>{{ result.semester }}</td>
+            <td>{{ result.status }}</td>
+        </tr>
+        {% endfor %}
+        </table>
+        <p></p>
+        <p>Student Administration</p>
+    </body>
+    </html>
+    """
+    template = Template(body_template)
+    body = template.render(results=results,fullname=fullname,my_program=my_program) 
+    # 创建MIMEText对象
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'html'))
+
+    # 连接到SMTP服务器并发送邮件
+    try:
+        with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
+            server.starttls()  # 启用TLS加密
+            server.login(sender_email, password)  # 登录
+            server.send_message(msg)  # 发送邮件
+        flash(f'The email has been sent successfully to {receiver_email}！', 'success') 
+    except Exception as e:
+        flash(f"The email was not sent. Error: {e}",'error')
+    return redirect(url_for('subjects'))
 @app.route('/login', methods=['GET', 'POST'])  
 def login():  
     flask_session.pop('_flashes', None)
@@ -772,6 +804,7 @@ def programs():
     #         program_data.append({"Program": program_name,"Subject": subject,  "Degree": degree, "Hyperlink": hyperlink})  
     username = flask_session.get("username")
     fullname = get_fullname(username)  
+    my_major = get_major(username)
 
     conn = mysql.connector.connect(**connect.db_config)  
     cursor = conn.cursor(dictionary=True)  
@@ -809,7 +842,7 @@ def programs():
         select_query = "SELECT * FROM lincoln_programs;"  
         cursor.execute(select_query)  
         program_data = cursor.fetchall()  
-    return render_template('programs.html', program_data=program_data,fullname=fullname,username=username,degrees=degrees,total_credits=total_credits_options,duration=duration_options)
+    return render_template('programs.html', program_data=program_data,fullname=fullname,username=username,degrees=degrees,total_credits=total_credits_options,duration=duration_options,my_major=my_major)
 
 
 if __name__ == '__main__':
