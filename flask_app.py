@@ -202,78 +202,6 @@ def index():
     
     return render_template('Index6.html', results=results, message=message, fullname=fullname, roles=roles,next_id=next_id)
 
-@app.route('/subject', methods=['GET', 'POST']) 
-def subject():
-
-    results = []  
-    message = ""  
-    cursor = None  
-    conn = None  
-
-    if request.method == 'POST':  
-        # Insert data part  
-        if 'insert' in request.form:  
-            student_no = request.form.get('student_no')  
-            subject_no = request.form.get('subject_no')  
-            subject_name = request.form.get('subject_name')  
-            credit = request.form.get('credit')  
-
-            try:  
-                conn = mysql.connector.connect(**connect.db_config)  
-                cursor = conn.cursor()  
-
-                insert_query = "INSERT INTO Student_subject (Student_No, Subject_No, Subject_Name, Subject_Credit) VALUES (%s, %s, %s, %s)"  
-                cursor.execute(insert_query, (student_no, subject_no, subject_name, credit))  
-                conn.commit()  
-                message = "Student subject information inserted successfully!"  
-
-            except Error as e:  
-                message = f"Database error: {e}"  
-
-            finally:  
-                if cursor is not None:  
-                    cursor.close()  
-                if conn is not None:  
-                    conn.close()  
-        if 'delete' in request.form:  
-            student_no = request.form.get('student_no_del')  
-            subject_no = request.form.get('subject_no_del')   
-
-            try:  
-                conn = mysql.connector.connect(**connect.db_config)  
-                cursor = conn.cursor()  
-
-                insert_query = "delete from Student_subject where Student_No = %s and Subject_No = %s"  
-                cursor.execute(insert_query, (student_no, subject_no))  
-                conn.commit()  
-                message = "Student subject information deleted successfully!"  
-
-            except Error as e:  
-                message = f"Database error: {e}"  
-
-            finally:  
-                if cursor is not None:  
-                    cursor.close()  
-                if conn is not None:  
-                    conn.close()  
-    # Query data part  
-    try:  
-        conn = mysql.connector.connect(**connect.db_config)  
-        cursor = conn.cursor(dictionary=True)  
-
-        select_query = "SELECT * FROM Student_subject"  
-        cursor.execute(select_query)  
-        results = cursor.fetchall()  
-
-    except Error as e:  
-        message = f"Database query error: {e}"  
-
-    finally:  
-        if cursor is not None:  
-            cursor.close()  
-        if conn is not None:  
-            conn.close()  
-    return render_template('subject.html', results=results, message=message)
 
 def query_subjects(subject_no,subject_name, credit, dept):  
     try:  
@@ -487,8 +415,36 @@ def course_mgmt():
     #             print("Results is null")
     my_major = get_major(username)
     return render_template('course_mgmt.html', results=results, message=message, fullname=fullname,username=username,years = years,my_major=my_major)
+
+
+def send_email(receiver_email, subject, body_template, results):  #*results 代表可变参数，可以传入多个结果  
+    sender_email = "python.lincoln.university@outlook.com"  
+    password = "66363851lk"  
+
+    # 渲染模板  
+    template = Template(body_template)  
+    body = template.render(results=results)  
+
+    # 创建MIMEText对象  
+    msg = MIMEMultipart()  
+    msg['From'] = sender_email  
+    msg['To'] = receiver_email  
+    msg['Subject'] = subject  
+    msg.attach(MIMEText(body, 'html'))  
+
+    # 连接到SMTP服务器并发送邮件  
+    try:  
+        with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:  
+            server.starttls()  # 启用TLS加密  
+            server.login(sender_email, password)  # 登录  
+            server.send_message(msg)  # 发送邮件  
+        return True  # 邮件发送成功  
+    except Exception as e:  
+        print(f"The email was not sent. Error: {e}")  
+        return False  # 邮件发送失败
+    
 @app.route('/send_email', methods=['GET', 'POST']) 
-def send_email():
+def send_email_page():
     username = flask_session.get("username")
     #flask_session.pop('username', None)
     conn = mysql.connector.connect(**connect.db_config)  
@@ -496,7 +452,7 @@ def send_email():
     select_query = """select a.subject_no, b.subject_name, b.credits, b.lecturer, b.dept, a.study_year, a.semester, a.status
     from student_courses as a inner join Lincoln_Courses as b on a.subject_no = b.subject_no where username = %s order by a.subject_no asc; """  
     cursor.execute(select_query,(username,))  
-    results = cursor.fetchall() 
+    my_courses = cursor.fetchall() 
     try:  
         select_query = "select email from users2 where username = %s"  
         cursor.execute(select_query, (username,))  
@@ -515,10 +471,16 @@ def send_email():
     if conn is not None:  
         conn.close()    
     fullname = get_fullname(username)
+    results = []  
+    results = {
+        'fullname': fullname,  
+         'my_program': my_program,  
+         'my_courses': my_courses
+    }
     # 邮件发送者和接收者
-    sender_email = "kevin.liu.nz@hotmail.com"
+    sender_email = "python.lincoln.university@outlook.com"
     receiver_email = remail["email"]  # 替换为接收者的邮箱
-    password = "66363851lk"  # 替换为您的邮箱密码
+    #password = "66363851lk"  # 替换为您的邮箱密码
     # 创建邮件内容
     subject = f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} {username} Course Selection Result'
     body_template = """
@@ -546,7 +508,7 @@ def send_email():
         </style>
     </head>
     <body>
-        <p>Dear {{fullname[0]}} {{fullname[1]}}:</p>
+        <p>Dear {{results['fullname'][0]}} {{results['fullname'][1]}},</p>
         <p>This is your latest course information.</p>
         <p>Your major information:</p>
         <table border="1">  
@@ -560,13 +522,13 @@ def send_email():
                 <th>Details</th>  
             </tr>   
             <tr>  
-                <td>{{ my_program.program }}</td>  
-                <td>{{ my_program.subject_area }}</td>  
-                <td>{{ my_program.degree }}</td>  
-                <td>{{ my_program.total_credit}}</td>  
-                <td>{{ my_program.duration }}</td>  
-                <td>{{ my_program.location}}</td>  
-                <td><a href="{{my_program.hyperlink }}"> View</a></td>  
+                <td>{{ results["my_program"]["program"] }}</td>  
+                <td>{{ results["my_program"]["subject_area"] }}</td>  
+                <td>{{ results["my_program"]["degree"] }}</td>  
+                <td>{{ results["my_program"]["total_credit"] }}</td>  
+                <td>{{ results["my_program"]["duration"] }}</td>  
+                <td>{{ results["my_program"]["location"]}}</td>  
+                <td><a href="{{results['my_program']['hyperlink'] }}"> View</a></td>  
             </tr>  
         </table> 
         <p>Your course information:</p>
@@ -581,7 +543,7 @@ def send_email():
             <th>Semester</th>
             <th>Status</th>
         </tr>
-        {% for result in results %}
+        {% for result in results["my_courses"] %}
         <tr>
             <td>{{ result.subject_no }}</td>
             <td>{{ result.subject_name }}</td>
@@ -599,25 +561,33 @@ def send_email():
     </body>
     </html>
     """
-    template = Template(body_template)
-    body = template.render(results=results,fullname=fullname,my_program=my_program) 
-    # 创建MIMEText对象
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = receiver_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'html'))
+    #template = Template(body_template)
+    #body = template.render(results=results,fullname=fullname,my_program=my_program) 
+    success = send_email(receiver_email, subject, body_template,results)  
 
-    # 连接到SMTP服务器并发送邮件
-    try:
-        with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
-            server.starttls()  # 启用TLS加密
-            server.login(sender_email, password)  # 登录
-            server.send_message(msg)  # 发送邮件
-        flash(f'The email has been sent successfully to {receiver_email}！', 'success') 
-    except Exception as e:
-        flash(f"The email was not sent. Error: {e}",'error')
-    return redirect(url_for('subjects'))
+    # # 创建MIMEText对象
+    # msg = MIMEMultipart()
+    # msg['From'] = sender_email
+    # msg['To'] = receiver_email
+    # msg['Subject'] = subject
+    # msg.attach(MIMEText(body, 'html'))
+
+    # # 连接到SMTP服务器并发送邮件
+    # try:
+    #     with smtplib.SMTP('smtp-mail.outlook.com', 587) as server:
+    #         server.starttls()  # 启用TLS加密
+    #         server.login(sender_email, password)  # 登录
+    #         server.send_message(msg)  # 发送邮件
+    #     flash(f'The email has been sent successfully to {receiver_email}！', 'success') 
+    # except Exception as e:
+    #     flash(f"The email was not sent. Error: {e}",'error')
+    # return redirect(url_for('subjects'))
+    if success:  
+        flash(f'The email has been sent successfully to {receiver_email}！', 'success')   
+    else:  
+        flash('The email was not sent. Please try again.', 'error')  
+
+    return redirect(url_for('subjects'))  
 @app.route('/login', methods=['GET', 'POST'])  
 def login():  
     flask_session.pop('_flashes', None)
