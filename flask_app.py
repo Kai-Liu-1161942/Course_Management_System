@@ -20,7 +20,8 @@ import pandas as pd
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
-
+import random
+import socket
 
 app = Flask(__name__)  
 
@@ -594,31 +595,142 @@ def login():
                 connection.close()  
     return render_template('login.html')
 
+def send_verification_code():
+    username = request.form.get('username')
+    first_name = request.form.get('first_name')
+    last_name = request.form.get('last_name')
+    receiver_email = request.form.get('email')
+    # 生成验证码  
+    verification_code = str(random.randint(100000, 999999))  
+    flask_session['verification_code'] = verification_code  
+    receiver_email = request.form['email'] 
+    subject = f"Verification Code for {username}"
+    results = []
+    results = {
+        'first_name': first_name,
+        'last_name': last_name,
+        'verification_code': verification_code
+    }
+    body_template = """
+    <html>
+    <head></head>
+    <body>
+        <p>Dear {{results['first_name'] }} {{results['last_name'] }},</p>
+        <p></p>
+        <p>Your verification code is: <b>{{results['verification_code'] }}.</b></p>
+        <p></p>
+        <p>Student Administration</p>
+    </body>
+    </html>
+    """
+    # 发送验证码邮件  
+    feedback = send_email(receiver_email, subject, body_template,results) 
+    if feedback == True:
+        flash('Verification code sent! Please check your email to continue.', 'info')  
+        return render_template('register.html')
+    else:
+        flash('Failed to send verification email. Please try again.', 'error') 
+
 @app.route('/register', methods=['GET', 'POST'])  
 def register():  
-    if request.method == 'POST':  
+    if request.method == 'POST' and 'send_code' in request.form: 
+        flask_session['username'] = request.form['username']  
+        flask_session['password'] = request.form['password'] 
+        flask_session['gender'] = request.form['gender']  
+        flask_session['birth_date'] = request.form['birth_date']  
+        flask_session['first_name'] = request.form['first_name']  
+        flask_session['last_name'] = request.form['last_name']  
+        flask_session['email'] = request.form['email']  
+
+        # 生成验证码  
+        verification_code = str(random.randint(100000, 999999))  
+        flask_session['verification_code'] = verification_code  
+        receiver_email = request.form['email'] 
+        subject = f"Verification Code for {request.form['username'] }"
+        results = []
+        results = {
+            'first_name': request.form['first_name'],
+            'last_name': request.form['last_name'],
+            'verification_code': verification_code
+        }
+        body_template = """
+    <html>
+    <head></head>
+    <body>
+        <p>Dear {{results['first_name'] }} {{results['last_name'] }},</p>
+        <p></p>
+        <p>Your verification code is: <b>{{results['verification_code'] }}.</b></p>
+        <p></p>
+        <p>Student Administration</p>
+    </body>
+    </html>
+    """
+        input_value = {} #空的字典
+        input_value = {
+            'username': request.form['username'],
+            'password': request.form['password'],
+            'gender': request.form['gender'],
+            'birth_date': request.form['birth_date'],
+            'first_name': request.form['first_name'],
+            'last_name': request.form['last_name'],
+            'email': request.form['email']
+
+
+        }
+        # 发送验证码邮件  
+        feedback = send_email(receiver_email, subject, body_template,results) 
+        if feedback == True:
+            flash('Verification code sent! Please check your email to continue.', 'info')  
+            return render_template('register.html',input_value=input_value)
+        
+        else:
+            flash('Failed to send verification email. Please try again.', 'error')  
+            render_template('register.html',input_value=input_value)  
+ 
+
+    if request.method == 'POST' and 'register' in request.form: 
+        flask_session.pop('_flashes', None)
         username = request.form['username']  
-        password = generate_password_hash(request.form['password'])  # 哈希密码  
+        password = request.form['password']  
+        #password = generate_password_hash(request.form['password'])  # 哈希密码  
         gender = request.form['gender']
         birth_date = request.form['birth_date']
         first_name = request.form['first_name']
         last_name = request.form['last_name']
         email = request.form['email']
-        try:  
-            connection = mysql.connector.connect(**connect.db_config)  
-            cursor = connection.cursor()  
-            cursor.execute("INSERT INTO users2 (username, password, gender, birth_date, register_date, first_name, last_name, email, role) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (username, password, gender, birth_date, datetime.now().date(),first_name,last_name,email,"student"))  
-            connection.commit()  
-            flash('Register successfully, please login', 'success')  
-            return redirect(url_for('login'))  
-        except mysql.connector.Error as err:  
-            print(f"Error: {err}")  
-            flash('Registration failed, the username may already exist', 'error')  
-        finally:  
-            #if connection.is_connected():  
-                cursor.close()  
-                connection.close()  
-    return render_template('register.html')
+        verification_code_form = request.form['verification_code']  
+        verification_code_session = flask_session.get('verification_code')  
+        input_value = {} #空的字典
+        input_value = {
+            'username': username,
+            'password': password,
+            'gender': gender,
+            'birth_date': birth_date,
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email
+        }
+        if verification_code_form != verification_code_session:  
+            flash('Verification code is incorrect, please try again.', 'error')  
+            return render_template('register.html',input_value=input_value)  
+        else:
+            try:  
+                connection = mysql.connector.connect(**connect.db_config)  
+                cursor = connection.cursor()  
+                cursor.execute("INSERT INTO users2 (username, password, gender, birth_date, register_date, first_name, last_name, email, role) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (username, password, gender, birth_date, datetime.now().date(),first_name,last_name,email,"student"))  
+                connection.commit()  
+                flash('Register successfully, please login', 'success')  
+                return redirect(url_for('login'))  
+            except mysql.connector.Error as err:  
+                print(f"Error: {err}")  
+                flash('Registration failed, the username may already exist', 'error')  
+            finally:  
+                if 'connection' in locals() and connection.is_connected(): 
+                    cursor.close()  
+                    connection.close()
+    if request.method == 'GET':
+        input_value = {} #空的字典
+        return render_template('register.html',input_value=input_value)
 
 @app.route('/logout')  
 def logout():  
