@@ -159,24 +159,27 @@ def index():
                     conn.close()  
         if 'delete' in request.form:  
             student_id = request.form.get('student_del_id')  
+            if not student_id:
+                message = "Please select a student to delete."
+            else:
 
-            try:  
-                conn = mysql.connector.connect(**connect.db_config)  
-                cursor = conn.cursor()  
+                try:  
+                    conn = mysql.connector.connect(**connect.db_config)  
+                    cursor = conn.cursor()  
 
-                update_query = "Delete from Student_infor WHERE Student_No = %s"  
-                cursor.execute(update_query, (int(student_id),))  
-                conn.commit()  
-                message = f"Student information {student_id} deleted successfully!"  
+                    delete_query = "Delete from users2 WHERE username = %s"  
+                    cursor.execute(delete_query, (student_id,))  
+                    conn.commit()  
+                    message = f"Student information {student_id} deleted successfully!"  
 
-            except Error as e:  
-                message = f"Database error: {e}"  
+                except Error as e:  
+                    message = f"Database error: {e}"  
 
-            finally:  
-                if cursor is not None:  
-                    cursor.close()  
-                if conn is not None:  
-                    conn.close() 
+                finally:  
+                    if cursor is not None:  
+                        cursor.close()  
+                    if conn is not None:  
+                        conn.close() 
 
     # Query data part  
     try:  
@@ -294,6 +297,7 @@ def get_major(username):
 
 @app.route('/subjects', methods=['GET', 'POST']) 
 def subjects():
+    flask_session.pop('_flashes', None)
     username = flask_session.get('username')
     fullname = get_fullname(username)
     results = []  
@@ -450,7 +454,7 @@ def send_email_page():
     #flask_session.pop('username', None)
     conn = mysql.connector.connect(**connect.db_config)  
     cursor = conn.cursor(dictionary=True)  
-    select_query = """select a.subject_no, b.subject_name, b.credits, b.lecturer, b.dept, a.study_year, a.semester, a.status
+    select_query = """select a.subject_no, b.subject_name, b.credits, b.lecturer, b.dept, a.study_year, a.semester, a.status, b.hyper_link
     from student_courses as a inner join Lincoln_Courses as b on a.subject_no = b.subject_no where username = %s order by a.subject_no asc; """  
     cursor.execute(select_query,(username,))  
     my_courses = cursor.fetchall() 
@@ -543,6 +547,7 @@ def send_email_page():
             <th>Study Year</th>
             <th>Semester</th>
             <th>Status</th>
+            <th>details</th>
         </tr>
         {% for result in results["my_courses"] %}
         <tr>
@@ -554,6 +559,7 @@ def send_email_page():
             <td>{{ result.study_year }}</td>
             <td>{{ result.semester }}</td>
             <td>{{ result.status }}</td>
+            <td> <a href="{{result.hyper_link }}"> View</a></td
         </tr>
         {% endfor %}
         </table>
@@ -715,6 +721,7 @@ def register():
             return render_template('register.html',input_value=input_value)  
         else:
             try:  
+                password = generate_password_hash(password)  # 哈希密码  
                 connection = mysql.connector.connect(**connect.db_config)  
                 cursor = connection.cursor()  
                 cursor.execute("INSERT INTO users2 (username, password, gender, birth_date, register_date, first_name, last_name, email, role) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (username, password, gender, birth_date, datetime.now().date(),first_name,last_name,email,"student"))  
@@ -899,7 +906,7 @@ def programs():
             conn.commit()  # 提交事务  
             cursor.close()  
             conn.close()  # 关闭连接  
-            return redirect(url_for('course_mgmt'))
+            return redirect(url_for('index'))
 
     if request.method == 'GET':
         select_query = "SELECT * FROM lincoln_programs;"  
